@@ -697,34 +697,42 @@
 <div id="tab-visualizer" style="display: block;">
 <div class="page-pad">
 
+    <!-- quick start banner -->
+    <div style="background-color: #1e3a5f; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #bfdbfe; line-height: 1.7;">
+        <b style="color: #93c5fd;">Quick start:</b> Type some job times below (or pick a preset) &rarr; choose an algorithm &rarr; click <b>Build Steps</b> &rarr; press <b>Play</b> to watch it run. Use the other tabs at the top to compare algorithms, read the proof, or see worked examples.
+    </div>
+
     <!-- Row 1: Job input (left) + Algorithm controls (right) -->
     <div style="display: flex; gap: 14px; flex-wrap: wrap;">
 
         <div class="box" style="flex: 2; min-width: 260px;">
             <div class="box-title">Job Input</div>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px;">Each number is a job and its value is how long that job takes to run. For example if you type <b style="color: #e5e7eb;">5, 3, 8</b> there are 3 jobs taking 5, 3, and 8 units of time. The tool will assign them across 2 machines.</p>
             <label>Processing times (comma-separated, max 12):</label>
             <input type="text" id="jobInput" value="6, 5, 4, 3, 3, 2" placeholder="e.g. 5, 4, 3, 2, 1">
             <p style="color: #6b7280; font-size: 12px; margin: 5px 0 8px;">
                 Locked to <b style="color: #60a5fa;">2 machines</b> &mdash; required for the Partition reduction proof.
             </p>
-            <label>Presets:</label>
+            <label>Presets &mdash; click one to load a ready-made example:</label>
             <div style="margin-top: 4px;">
                 <button class="preset-btn" onclick="loadPreset(0)">Balanced</button>
                 <button class="preset-btn" onclick="loadPreset(1)">LPT Fails</button>
                 <button class="preset-btn" onclick="loadPreset(2)">Partition</button>
                 <button class="preset-btn" onclick="loadPreset(3)">Skewed</button>
             </div>
+            <p style="color: #4b5563; font-size: 11px; margin: 6px 0 0;">"LPT Fails" is the most interesting one &mdash; it shows a case where the greedy algorithm is NOT optimal.</p>
         </div>
 
         <div class="box" style="flex: 1; min-width: 200px;">
             <div class="box-title">Controls</div>
-            <label>Algorithm:</label>
+            <label>Pick an algorithm to visualize:</label>
             <select id="algoSelect" onchange="onAlgoChange()">
                 <option value="lpt">LPT &mdash; Longest Processing Time (Greedy)</option>
                 <option value="brute">Brute Force &mdash; Exact (Exponential)</option>
                 <option value="random">Random Assignment</option>
             </select>
-            <label>Speed (1=slow, 10=fast): <b id="speedDisplay" style="color: #60a5fa;">5</b></label>
+            <p style="color: #4b5563; font-size: 11px; margin: 4px 0 0;">LPT is the main algorithm. Brute force checks every possible assignment (slow but always correct). Random is just for comparison.</p>
+            <label>Animation speed (1=slow, 10=fast): <b id="speedDisplay" style="color: #60a5fa;">5</b></label>
             <input type="range" id="speedSlider" min="1" max="10" value="5"
                    oninput="document.getElementById('speedDisplay').textContent = this.value">
             <div style="margin-top: 10px;">
@@ -733,6 +741,7 @@
                 <button class="btn btn-secondary" onclick="doStep()">Step</button>
                 <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
             </div>
+            <p style="color: #4b5563; font-size: 11px; margin: 4px 0 0;"><b style="color:#6b7280;">Build Steps</b> = prepare &nbsp;&bull;&nbsp; <b style="color:#6b7280;">Play</b> = auto-run &nbsp;&bull;&nbsp; <b style="color:#6b7280;">Step</b> = one at a time</p>
             <div class="step-count">Step: <b id="stepNum">0</b> / <span id="totalSteps">0</span></div>
             <div id="statusMsg">Ready &mdash; press Build Steps to start.</div>
         </div>
@@ -745,7 +754,8 @@
         <!-- LEFT: Gantt + chips + legend + explanation -->
         <div style="flex: 1.45; min-width: 0;">
             <div class="box">
-                <div class="box-title">Visualization</div>
+                <div class="box-title">Gantt Chart &mdash; Job Assignment Visualization</div>
+                <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px;">Each colored block is one job. The width of the block shows how long that job takes. The goal is to keep both machines finishing at roughly the same time.</p>
                 <div class="chips-area" id="chipsArea" style="margin-bottom: 6px;"></div>
                 <div class="gantt-legend" id="ganttLegend" style="margin-bottom: 10px;"></div>
                 <div class="gantt-area">
@@ -758,7 +768,7 @@
                         <div class="gantt-track" id="gtrack1"></div>
                     </div>
                 </div>
-                <div class="gantt-footer">Makespan: <b id="msLabel">—</b></div>
+                <div class="gantt-footer">Makespan (total finish time): <b id="msLabel">—</b></div>
                 <div class="explain" id="explainBox">
                     Press "Build Steps" then "Play" or "Step" to watch the algorithm run.
                 </div>
@@ -769,14 +779,16 @@
         <div style="flex: 1; min-width: 0;">
             <div class="box">
                 <div class="box-title">Statistics</div>
-                <div class="stat-line"><span>Makespan</span><span id="statMakespan">—</span></div>
-                <div class="stat-line"><span>Machine 1 load</span><span id="statM1">—</span></div>
-                <div class="stat-line"><span>Machine 2 load</span><span id="statM2">—</span></div>
-                <div class="stat-line"><span>Operations</span><span id="statOps">—</span></div>
+                <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px;">These update live as the animation runs.</p>
+                <div class="stat-line"><span>Makespan <span style="color:#4b5563; font-size:11px;">(finish time)</span></span><span id="statMakespan">—</span></div>
+                <div class="stat-line"><span>Machine 1 load <span style="color:#4b5563; font-size:11px;">(total work)</span></span><span id="statM1">—</span></div>
+                <div class="stat-line"><span>Machine 2 load <span style="color:#4b5563; font-size:11px;">(total work)</span></span><span id="statM2">—</span></div>
+                <div class="stat-line"><span>Operations <span style="color:#4b5563; font-size:11px;">(steps taken)</span></span><span id="statOps">—</span></div>
                 <div class="stat-line"><span>Algorithm</span><span id="statAlgo">—</span></div>
             </div>
             <div class="box">
                 <div class="box-title">Pseudocode</div>
+                <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px;">This shows the algorithm written out in plain steps. The <span style="background-color: rgba(59,130,246,0.18); color:#93c5fd; padding: 1px 5px; border-radius:3px;">highlighted line</span> is what the algorithm is currently doing.</p>
                 <div class="code-block" id="codeBlock"></div>
             </div>
         </div>
@@ -793,9 +805,12 @@
 <div class="page-pad">
 
     <div class="sec-title">Algorithm Comparison</div>
-    <p style="font-size: 13px; color: #9ca3af; margin-bottom: 14px;">
-        Runs all three algorithms on the current jobs and compares makespan, loads, and operations.
-        Go to the <b style="color: #e5e7eb;">Visualizer</b> tab to change the jobs first.
+    <p style="font-size: 13px; color: #9ca3af; margin-bottom: 6px;">
+        This runs all three algorithms on the same set of jobs at once and shows the results side by side.
+        It is useful for seeing how much better LPT is compared to random, and whether it matches the brute force optimal.
+    </p>
+    <p style="font-size: 12px; color: #4b5563; margin-bottom: 14px;">
+        To change the jobs, go back to the <b style="color: #6b7280;">Visualizer</b> tab first, update the input, then come back here and click Run.
     </p>
     <button class="btn btn-primary" onclick="runComparison()">Run Comparison</button>
     <div id="cmpResult"></div>
@@ -809,6 +824,10 @@
 <!-- ============================================================ -->
 <div id="tab-theory" style="display: none;">
 <div class="page-pad">
+
+    <p style="font-size: 13px; color: #9ca3af; margin-bottom: 16px; line-height: 1.7;">
+        This tab covers the theory behind the project. It explains what the problem is, why it is considered hard (NP-complete), the formal proof of that, and a chart showing how fast the brute force blows up compared to the greedy algorithm.
+    </p>
 
     <!-- Overview cards -->
     <div class="sec-title">Problem Overview</div>
@@ -840,6 +859,7 @@
 
     <!-- NP proof -->
     <div class="sec-title">NP-Completeness Proof &mdash; Reduction from Partition</div>
+    <p style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">To prove a problem is NP-complete you need two things: (1) show a solution can be checked quickly, and (2) show that any other NP problem can be converted into yours. We do that below using the Partition problem.</p>
     <div class="two-col">
         <div>
             <div class="proof-step">
@@ -894,6 +914,7 @@
 
     <!-- Growth curve -->
     <div class="sec-title" style="margin-top: 8px;">Growth Curve &mdash; Brute Force (2<sup>n</sup>) vs LPT (n log n)</div>
+    <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">This chart shows why we can not just always use brute force. As the number of jobs increases, the brute force number of operations shoots up exponentially (doubles every time you add one job). LPT stays nearly flat by comparison.</p>
     <div style="display: flex; gap: 18px; margin-bottom: 10px; font-size: 13px;">
         <span>
             <span style="display:inline-block; width:12px; height:12px; background:#ef4444; border-radius:2px; margin-right:4px; vertical-align:middle;"></span>
@@ -918,10 +939,14 @@
 <div id="tab-examples" style="display: none;">
 <div class="page-pad">
 
+    <p style="font-size: 13px; color: #9ca3af; margin-bottom: 16px; line-height: 1.7;">
+        This tab has two manually traced examples of LPT running, plus a section explaining why LPT is considered a "greedy" algorithm and how we know it is never more than 16.7% worse than the best possible answer.
+    </p>
+
     <!-- Worked examples -->
     <div class="sec-title">Worked Examples &mdash; LPT Step-by-Step &amp; Counterexample</div>
     <p style="font-size: 13px; color: #9ca3af; margin-bottom: 14px;">
-        Two examples: one where LPT finds the optimal, and one where it does NOT.
+        Two examples traced by hand: one where LPT gets the best answer, and one where it does not. The highlighted row is the last step where you can see the final makespan.
     </p>
 
     <div style="display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 22px;">
@@ -966,6 +991,7 @@
 
     <!-- Greedy paradigm + approximation bound -->
     <div class="sec-title">Algorithm Design &mdash; Greedy Paradigm &amp; Approximation Bound</div>
+    <p style="font-size: 12px; color: #6b7280; margin-bottom: 14px;">This section explains what kind of algorithm LPT is and why it is not too far off from the best possible answer. The left side covers the "greedy" design pattern. The right side shows the math behind how close LPT actually gets.</p>
 
     <div style="display: flex; gap: 18px; flex-wrap: wrap;">
 
