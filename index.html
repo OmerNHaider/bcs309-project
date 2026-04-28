@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scheduling — BCS 309</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ---- HEADER ---- */
+        .site-header {
+            background: #1e3a8a;
+            padding: 20px 36px;
+        }
+
+        .site-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 3px;
+        }
+
+        .site-header p {
+            font-size: 12px;
+            color: #93c5fd;
+        }
+
+        /* ---- PAGE WRAPPER ---- */
+        .page {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        /* ---- TABS ---- */
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 32px;
+        }
+
+        .tab-btn {
+            padding: 10px 22px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+        }
+
+        .tab-btn:hover { color: #475569; }
+
+        .tab-btn.active-tab {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        /* ---- CARDS ---- */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 12px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* ---- SECTION HEADINGS ---- */
+        h3.sec {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px;
+        }
+
+        h3.sec + p {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .sec-block { margin-bottom: 32px; }
+
+        /* ---- FORM ELEMENTS ---- */
+        label {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 12px;
+            margin-bottom: 4px;
+        }
+
+        label:first-child { margin-top: 0; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px 11px;
+            background: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"]:focus { outline: none; border-color: #2563eb; background: #fff; }
+
+        select {
+            width: 100%;
+            padding: 8px 11px;
+            background: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="range"] { width: 100%; margin-top: 6px; accent-color: #2563eb; }
+
+        /* ---- BUTTONS ---- */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13px;
+            border: none;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-weight: 600;
+        }
+
+        .btn-blue { background: #2563eb; color: #fff; }
+        .btn-blue:hover { background: #1d4ed8; }
+
+        .btn-gray { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-gray:hover { background: #e2e8f0; }
+
+        .preset-btn {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 5px 11px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .preset-btn:hover { background: #dbeafe; }
+
+        /* ---- STATUS & STEP COUNT ---- */
+        #statusMsg {
+            margin-top: 10px;
+            padding: 8px 11px;
+            border-radius: 7px;
+            font-size: 13px;
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .step-count {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .step-count b { color: #2563eb; }
+
+        /* ---- CHIPS ---- */
+        .chips-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 28px;
+            margin-bottom: 6px;
+        }
+
+        .chip {
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+
+        .chip.lit { border-color: #1e293b; transform: scale(1.1); }
+
+        .c0  { background: #ef4444; }
+        .c1  { background: #2563eb; }
+        .c2  { background: #16a34a; }
+        .c3  { background: #d97706; }
+        .c4  { background: #7c3aed; }
+        .c5  { background: #0891b2; }
+        .c6  { background: #ea580c; }
+        .c7  { background: #65a30d; }
+        .c8  { background: #db2777; }
+        .c9  { background: #6d28d9; }
+        .c10 { background: #0d9488; }
+        .c11 { background: #be123c; }
+
+        /* ---- GANTT ---- */
+        .gantt-wrap { margin: 8px 0 10px; }
+
+        .gantt-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .gantt-label {
+            width: 78px;
+            flex-shrink: 0;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .gantt-track {
+            flex: 1;
+            height: 42px;
+            background: #f8fafc;
+            border-radius: 6px;
+            display: flex;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .gantt-block {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            border-right: 2px solid rgba(255,255,255,0.25);
+            transition: width 0.15s ease;
+        }
+
+        .gantt-footer {
+            margin-left: 78px;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .legend-row {
+            margin-left: 78px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .legend-dot { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+
+        /* ---- EXPLAIN BOX ---- */
+        .explain {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 9px 13px;
+            border-radius: 7px;
+            font-size: 13px;
+            color: #64748b;
+            min-height: 40px;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        /* ---- STATS ---- */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .stat-row:last-child { border-bottom: none; }
+        .stat-row span:last-child { color: #2563eb; font-weight: 700; }
+
+        /* ---- PSEUDOCODE ---- */
+        .code-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 10px 0;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.85;
+            margin-bottom: 8px;
+        }
+
+        .code-line { display: flex; padding: 0 14px; color: #94a3b8; }
+
+        .code-line.on {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left: 3px solid #2563eb;
+            padding-left: 11px;
+        }
+
+        .line-num { min-width: 22px; color: #cbd5e1; font-size: 11px; user-select: none; }
+        .code-line.on .line-num { color: #93c5fd; }
+
+        /* ---- VISUALIZER LAYOUT ---- */
+        .vis-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .vis-left {
+            width: 270px;
+            flex-shrink: 0;
+        }
+
+        .vis-right { flex: 1; min-width: 0; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #f1f5f9;
+            margin: 14px 0;
+        }
+
+        /* ---- QUICK START TIP ---- */
+        .tip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 11px 15px;
+            font-size: 12px;
+            color: #1d4ed8;
+            margin-bottom: 22px;
+            line-height: 1.7;
+        }
+
+        /* ---- THEORY / OVERVIEW PAGE ---- */
+        .overview-grid {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .ov-card {
+            flex: 1;
+            min-width: 180px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 18px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.65;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .ov-card h4 {
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .two-col {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .two-col > div { flex: 1; min-width: 0; }
+
+        .proof-step {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 13px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .proof-step h4 {
+            color: #1e40af;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .reduction-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 22px;
+            text-align: center;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .r-box {
+            display: inline-block;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 7px;
+            padding: 10px 15px;
+            font-size: 13px;
+            color: #1e40af;
+            vertical-align: middle;
+        }
+
+        .r-arrow { color: #2563eb; font-size: 20px; margin: 0 10px; vertical-align: middle; }
+
+        .note {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 7px;
+            padding: 10px 13px;
+            font-size: 13px;
+            color: #1d4ed8;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .note.red { background: #fff5f5; border: 1px solid #fecaca; color: #b91c1c; }
+
+        .worked-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .worked-table th {
+            background: #f8fafc;
+            color: #64748b;
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+
+        .worked-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+            background: #fff;
+        }
+
+        .worked-table tr:last-child td { border-bottom: none; }
+        .hl-row td { background: #eff6ff; color: #2563eb; }
+
+        .algo-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .algo-box b { color: #2563eb; }
+
+        .approx-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.7;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .approx-card h4 { color: #1e40af; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+
+        /* ---- ACCORDION ---- */
+        .acc {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .acc-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .acc-header::-webkit-details-marker { display: none; }
+
+        .acc-header::after {
+            content: '+';
+            color: #94a3b8;
+            font-size: 20px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        details[open] > .acc-header::after { content: '−'; }
+
+        .acc-header:hover { background: #f8fafc; }
+
+        .acc-body {
+            padding: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        /* ---- GROWTH CHART ---- */
+        .growth-wrap {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .g-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .g-label { width: 48px; color: #94a3b8; }
+        .g-bars { flex: 1; margin: 0 10px; }
+        .g-track { height: 10px; background: #e2e8f0; border-radius: 2px; margin-bottom: 2px; overflow: hidden; }
+        .g-fill { height: 100%; border-radius: 2px; }
+        .g-nums { width: 115px; text-align: right; color: #94a3b8; font-size: 11px; }
+
+        /* ---- COMPARE ---- */
+        .cmp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+        .cmp-table th { background: #f8fafc; color: #64748b; padding: 9px 11px; text-align: left; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+        .cmp-table td { padding: 8px 11px; border-bottom: 1px solid #f1f5f9; color: #475569; background: #fff; }
+        .cmp-table tr:hover td { background: #f8fafc; }
+        .opt-row td { color: #16a34a; font-weight: 700; }
+
+        .cmp-grid { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+        .cmp-col { flex: 1; min-width: 170px; }
+        .cmp-col-title { font-size: 12px; color: #2563eb; font-weight: 700; margin-bottom: 6px; }
+
+        .mini-row { display: flex; align-items: center; margin-bottom: 5px; }
+        .mini-label { width: 62px; font-size: 11px; color: #94a3b8; flex-shrink: 0; }
+        .mini-track { flex: 1; height: 26px; background: #f8fafc; border-radius: 4px; display: flex; overflow: hidden; border: 1px solid #e2e8f0; }
+        .mini-block { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+        .mini-footer { font-size: 11px; color: #94a3b8; margin-top: 3px; margin-left: 62px; }
+
+        /* ---- FOOTER ---- */
+        footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 14px 32px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 700px) {
+            .vis-layout { flex-direction: column; }
+            .vis-left { width: 100%; }
+            .two-col { flex-direction: column; }
+            .overview-grid { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="site-header">
+    <h1>Job Scheduling on Identical Machines &mdash; Makespan</h1>
+    <p>BCS 309 &mdash; Algorithms I &nbsp;&bull;&nbsp; Spring 2026 &nbsp;&bull;&nbsp; Haider, Omer Nazar &nbsp;&bull;&nbsp; ID: 20230002922</p>
+</div>
+
+<div class="page">
+
+    <nav class="tab-nav">
+        <button class="tab-btn active-tab" id="tabBtn-overview"   onclick="switchTab('overview')">Overview</button>
+        <button class="tab-btn"            id="tabBtn-proof"      onclick="switchTab('proof')">NP Proof</button>
+        <button class="tab-btn"            id="tabBtn-visualizer" onclick="switchTab('visualizer')">Visualizer</button>
+        <button class="tab-btn"            id="tabBtn-compare"    onclick="switchTab('compare')">Compare</button>
+    </nav>
+
+    <!-- ====================================================== -->
+    <!-- TAB: OVERVIEW (default)                               -->
+    <!-- ====================================================== -->
+    <div id="tab-overview">
+
+        <p style="color:#64748b; font-size:13px; margin-bottom:24px; line-height:1.7;">
+            This tool visualizes the <b style="color:#cbd5e1;">Job Scheduling (Makespan)</b> NP-complete problem.
+            Use the <b style="color:#cbd5e1;">Visualizer</b> tab to animate the algorithms step by step.
+            See the <b style="color:#cbd5e1;">NP Proof</b> tab for the formal proof and complexity analysis.
+        </p>
+
+        <!-- Overview cards -->
+        <div class="overview-grid">
+            <div class="ov-card">
+                <h4>The Problem</h4>
+                <p>Given <b>n jobs</b>, each with a processing time, and <b>2 identical machines</b>, assign every job to one machine to minimize the <b>makespan</b> — the time when the last machine finishes.</p>
+                <p style="margin-top:8px; color:#94a3b8;">Makespan = max(Machine 1 load, Machine 2 load)</p>
+            </div>
+            <div class="ov-card">
+                <h4>Why Is It Hard?</h4>
+                <p>This problem is <b style="color:#f87171;">NP-complete</b>. No known algorithm finds the optimal schedule in polynomial time.</p>
+                <p style="margin-top:8px;">With n jobs there are <b>2<sup>n</sup></b> possible assignments. For 30 jobs that is over 1 billion.</p>
+            </div>
+            <div class="ov-card">
+                <h4>Our Approach</h4>
+                <p>We use <b>LPT (Longest Processing Time first)</b> — a greedy algorithm that runs in O(n log n) and is never more than <b>7/6&times;</b> worse than optimal for 2 machines.</p>
+            </div>
+        </div>
+
+        <!-- Worked examples -->
+        <h3 class="sec">Worked Examples &mdash; LPT Step-by-Step</h3>
+        <p>Two hand-traced examples: one where LPT finds the optimal, one where it does not.</p>
+
+        <div class="two-col" style="margin-top:14px;">
+            <div>
+                <p style="color:#60a5fa; font-weight:700; font-size:13px; margin-bottom:8px;">Example 1 &mdash; LPT optimal &nbsp; jobs: [5, 4, 3, 2, 1]</p>
+                <table class="worked-table">
+                    <tr><th>Step</th><th>Job</th><th>Machine</th><th>M1</th><th>M2</th></tr>
+                    <tr><td>1</td><td>5</td><td>M1 (both=0)</td><td>5</td><td>0</td></tr>
+                    <tr><td>2</td><td>4</td><td>M2 (0&lt;5)</td><td>5</td><td>4</td></tr>
+                    <tr><td>3</td><td>3</td><td>M2 (4&lt;5)</td><td>5</td><td>7</td></tr>
+                    <tr><td>4</td><td>2</td><td>M1 (5&lt;7)</td><td>7</td><td>7</td></tr>
+                    <tr class="hl-row"><td>5</td><td>1</td><td>M1 (tied)</td><td><b>8</b></td><td>7</td></tr>
+                </table>
+                <div class="note" style="margin-top:9px;">
+                    Makespan = <b>8</b>. Total = 15, OPT &ge; &lceil;15/2&rceil; = 8. LPT is optimal here.
+                </div>
+            </div>
+            <div>
+                <p style="color:#f87171; font-weight:700; font-size:13px; margin-bottom:8px;">Example 2 &mdash; LPT suboptimal &nbsp; jobs: [3, 3, 2, 2, 2]</p>
+                <table class="worked-table">
+                    <tr><th>Step</th><th>Job</th><th>Machine</th><th>M1</th><th>M2</th></tr>
+                    <tr><td>1</td><td>3</td><td>M1 (both=0)</td><td>3</td><td>0</td></tr>
+                    <tr><td>2</td><td>3</td><td>M2 (0&lt;3)</td><td>3</td><td>3</td></tr>
+                    <tr><td>3</td><td>2</td><td>M1 (tied&rarr;M1)</td><td>5</td><td>3</td></tr>
+                    <tr><td>4</td><td>2</td><td>M2 (3&lt;5)</td><td>5</td><td>5</td></tr>
+                    <tr class="hl-row"><td>5</td><td>2</td><td>M1 (tied&rarr;M1)</td><td><b>7</b></td><td>5</td></tr>
+                </table>
+                <div class="note red" style="margin-top:9px;">
+                    <p>LPT = <b>7</b>, Optimal = <b style="color:#4ade80;">6</b> (M1=[3,3], M2=[2,2,2]).</p>
+                    <p style="margin-top:4px; color:#94a3b8;">LPT separated the two 3s. Ratio = 7/6 &asymp; 1.167 — exactly the bound.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ====================================================== -->
+    <!-- TAB: NP PROOF                                          -->
+    <!-- ====================================================== -->
+    <div id="tab-proof" style="display:none;">
+
+        <p style="color:#64748b; font-size:13px; margin-bottom:24px; line-height:1.7;">
+            Click a section to expand it. These three sections cover the full NP-completeness argument required for the project.
+        </p>
+
+        <!-- ACCORDION 1: NP Proof -->
+        <details class="acc" open>
+            <summary class="acc-header">1 &nbsp;&mdash;&nbsp; NP-Completeness Proof &amp; Reduction from Partition</summary>
+            <div class="acc-body">
+                <p style="color:#64748b; font-size:13px; margin-bottom:16px;">To prove NP-complete: (1) a solution can be verified quickly, and (2) a known NP-complete problem reduces to ours in polynomial time.</p>
+
+                <div class="two-col">
+                    <div>
+                        <div class="proof-step">
+                            <h4>Step 1 &mdash; Job Scheduling is in NP</h4>
+                            <p>A <b>certificate</b> is an assignment of jobs to machines. A <b>verifier</b> sums the times on each machine and checks if the max is &le; D. This is O(n) &mdash; polynomial. So the problem is in NP.</p>
+                        </div>
+                        <div class="proof-step">
+                            <h4>Step 2 &mdash; Reduction from Partition</h4>
+                            <p><b>Partition:</b> Given numbers a<sub>1</sub>,...,a<sub>n</sub> summing to 2T, can we split them into two subsets each summing to T?</p>
+                            <p style="margin-top:8px;"><b>Construction O(n):</b> Create n jobs with p<sub>i</sub> = a<sub>i</sub>, m = 2 machines, target D = T. Just copies the numbers — polynomial time.</p>
+                        </div>
+                        <div class="proof-step">
+                            <h4>Forward &mdash; Partition YES &rarr; Scheduling YES</h4>
+                            <p>If S splits into two halves each summing to T, assign one half to each machine. Both loads = T. Makespan = max(T, T) = T = D. &#10003;</p>
+                        </div>
+                        <div class="proof-step">
+                            <h4>Backward &mdash; Scheduling YES &rarr; Partition YES</h4>
+                            <p>If makespan &le; T, both machines have load &le; T. Total load = 2T. The only way two values are each &le; T and sum to 2T is if both equal exactly T. So the assignments form a valid partition. &#10003;</p>
+                        </div>
+                        <div class="proof-step">
+                            <h4>Why m = 1 Is in P</h4>
+                            <p>With one machine there are no choices. Makespan = sum of all times. Compute the sum in O(n). The hardness comes entirely from choosing which machine to assign jobs to.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="reduction-box">
+                            <div style="color:#64748b; font-size:12px; margin-bottom:14px;">Polynomial-time many-one reduction</div>
+                            <div>
+                                <div class="r-box">
+                                    <b>PARTITION</b><br>
+                                    <small style="color:#1e40af;">Set S, sum = 2T<br>Two equal subsets?</small>
+                                </div>
+                                <span class="r-arrow">&le;<sub>p</sub></span>
+                                <div class="r-box">
+                                    <b>JOB SCHEDULING</b><br>
+                                    <small style="color:#1e40af;">n jobs, m=2, D=T<br>Makespan &le; D?</small>
+                                </div>
+                            </div>
+                            <div style="margin-top:14px; color:#64748b; font-size:12px;">
+                                S can be partitioned &hArr; jobs can be scheduled with makespan &le; T
+                            </div>
+                        </div>
+
+                        <div id="partitionLive"></div>
+
+                        <div class="note" style="margin-top:12px;">
+                            The live check above uses the jobs loaded in the Visualizer. Change the job input there, then switch back here and it auto-updates.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- ACCORDION 2: LPT Analysis -->
+        <details class="acc">
+            <summary class="acc-header">2 &nbsp;&mdash;&nbsp; LPT Algorithm Analysis &amp; Approximation Bound</summary>
+            <div class="acc-body">
+                <p style="color:#64748b; font-size:13px; margin-bottom:16px;">Why LPT is a greedy algorithm and how we know it is never more than 7/6&times; worse than optimal for 2 machines.</p>
+
+                <div class="two-col">
+                    <div>
+                        <p style="font-weight:700; font-size:13px; margin-bottom:10px; color:#1e293b;">LPT is a greedy algorithm</p>
+                        <div class="algo-box">
+                            The greedy pattern from the course:
+                            <div style="background:#f1f5f9; border-radius:5px; padding:10px 13px; margin:10px 0; font-family:'Courier New',monospace; font-size:12px; color:#475569; line-height:1.9;">
+                                <div>SORT(input)</div>
+                                <div>for x in input_order:</div>
+                                <div>&nbsp;&nbsp;if FEASIBLE(x, state):</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;TAKE(x, state)</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;UPDATE(state)</div>
+                            </div>
+                            LPT maps exactly onto this:
+                        </div>
+                        <div class="algo-box"><b>SORT</b> &mdash; Sort jobs from largest to smallest processing time.</div>
+                        <div class="algo-box"><b>TAKE</b> &mdash; Assign the next job to the machine with the smallest current load. Never go back.</div>
+                        <div class="algo-box"><b>UPDATE</b> &mdash; Add the job's time to that machine's load. Move to the next job.</div>
+                        <div class="algo-box"><b>Why it works:</b> Large jobs go first when machines are balanced, so small jobs fill any gaps at the end without creating big imbalances.</div>
+                    </div>
+                    <div>
+                        <p style="font-weight:700; font-size:13px; margin-bottom:10px; color:#1e293b;">Approximation bound &mdash; m = 2 machines</p>
+                        <div class="approx-card">
+                            <h4>General Formula</h4>
+                            <p>LPT makespan &le; (4/3 &minus; 1/(3m)) &times; OPT</p>
+                            <p style="margin-top:8px;">For m = 2: &nbsp;4/3 &minus; 1/6 = <b>7/6 &asymp; 1.167</b></p>
+                            <p style="margin-top:8px; color:#64748b;">LPT is never more than 16.7% worse than the optimal schedule.</p>
+                        </div>
+                        <div class="approx-card">
+                            <h4>Why It Holds</h4>
+                            <p>The last job placed (the smallest one) goes to the less-loaded machine. That machine's load before placement is &le; half the total job sum. The smallest job size is &le; OPT/m. Combining these gives the 7/6 bound.</p>
+                        </div>
+                        <div class="approx-card">
+                            <h4>Tight Example &mdash; Ratio = Exactly 7/6</h4>
+                            <p>Jobs [3, 3, 2, 2, 2] on 2 machines:</p>
+                            <p style="margin-top:5px;">LPT = 7 &nbsp;&bull;&nbsp; OPT = 6 &nbsp;&bull;&nbsp; Ratio = 7/6 &asymp; 1.167</p>
+                            <p style="margin-top:5px; color:#64748b;">No input with 2 machines can do worse than this ratio.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- ACCORDION 3: Growth Curve -->
+        <details class="acc">
+            <summary class="acc-header">3 &nbsp;&mdash;&nbsp; Growth Curve &mdash; Brute Force (2<sup>n</sup>) vs LPT (n log n)</summary>
+            <div class="acc-body">
+                <p style="color:#64748b; font-size:13px; margin-bottom:16px;">This shows why brute force cannot be used for large inputs. Each added job doubles the work for brute force.</p>
+
+                <div style="display:flex; gap:18px; margin:0 0 12px; font-size:13px;">
+                    <span><span style="display:inline-block; width:12px; height:12px; background:#ef4444; border-radius:2px; vertical-align:middle; margin-right:5px;"></span>Brute Force (2<sup>n</sup>)</span>
+                    <span><span style="display:inline-block; width:12px; height:12px; background:#16a34a; border-radius:2px; vertical-align:middle; margin-right:5px;"></span>LPT (~n log n)</span>
+                </div>
+                <div class="growth-wrap" id="growthChart"></div>
+                <p style="font-size:12px; color:#94a3b8; margin-top:8px;">Right column: Brute Force operations / LPT operations</p>
+            </div>
+        </details>
+
+    </div>
+
+    <!-- ====================================================== -->
+    <!-- TAB: VISUALIZER                                        -->
+    <!-- ====================================================== -->
+    <div id="tab-visualizer" style="display:none;">
+
+        <div class="tip">
+            <b>How to use:</b> &nbsp;
+            1. Enter job times or pick a preset &nbsp;&rarr;&nbsp;
+            2. Pick an algorithm &nbsp;&rarr;&nbsp;
+            3. Click <b>Build Steps</b> &nbsp;&rarr;&nbsp;
+            4. Press <b>Play</b> to animate, or <b>Step</b> to go one at a time.
+        </div>
+
+        <div class="vis-layout">
+
+            <!-- LEFT: Controls -->
+            <div class="vis-left">
+
+                <div class="card">
+                    <div class="card-title">Jobs</div>
+
+                    <label>Processing times (comma-separated, max 12):</label>
+                    <input type="text" id="jobInput" value="6, 5, 4, 3, 3, 2" placeholder="e.g. 5, 3, 8, 2">
+
+                    <p style="color:#475569; font-size:11px; margin:5px 0 10px;">
+                        Each number is one job. Locked to <b style="color:#60a5fa;">2 machines</b> — required for the Partition proof.
+                    </p>
+
+                    <label>Presets:</label>
+                    <div style="margin-top:4px;">
+                        <button class="preset-btn" onclick="loadPreset(0)">Balanced</button>
+                        <button class="preset-btn" onclick="loadPreset(1)">LPT Fails</button>
+                        <button class="preset-btn" onclick="loadPreset(2)">Partition</button>
+                        <button class="preset-btn" onclick="loadPreset(3)">Skewed</button>
+                    </div>
+                    <p style="color:#475569; font-size:11px; margin-top:5px;">"LPT Fails" shows a case where greedy is not optimal.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Algorithm</div>
+
+                    <label>Select algorithm:</label>
+                    <select id="algoSelect" onchange="onAlgoChange()">
+                        <option value="lpt">LPT — Longest Processing Time (Greedy)</option>
+                        <option value="brute">Brute Force — Exact (Exponential)</option>
+                        <option value="random">Random Assignment</option>
+                    </select>
+                    <p style="color:#475569; font-size:11px; margin-top:5px;">LPT is the main algorithm. Brute force checks all assignments (exact but slow). Random is for comparison.</p>
+
+                    <label>Animation speed (1=slow, 10=fast): <b id="speedDisplay" style="color:#60a5fa;">5</b></label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5"
+                           oninput="document.getElementById('speedDisplay').textContent = this.value">
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Controls</div>
+
+                    <div style="margin-top:4px;">
+                        <button class="btn btn-blue"  onclick="buildSteps()">Build Steps</button>
+                        <button class="btn btn-gray"  id="playBtn" onclick="togglePlay()">Play</button>
+                        <button class="btn btn-gray"  onclick="doStep()">Step</button>
+                        <button class="btn btn-gray"  onclick="resetAll()">Reset</button>
+                    </div>
+                    <p style="color:#475569; font-size:11px; margin:5px 0 8px;"><b style="color:#64748b;">Build Steps</b> prepares the animation &bull; <b style="color:#64748b;">Play</b> runs it automatically</p>
+
+                    <div class="step-count">Step: <b id="stepNum">0</b> / <span id="totalSteps">0</span></div>
+                    <div id="statusMsg">Ready — click Build Steps to start.</div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT: Visualization -->
+            <div class="vis-right">
+
+                <div class="card">
+                    <div class="card-title">Gantt Chart</div>
+
+                    <div class="chips-row" id="chipsArea"></div>
+                    <div class="legend-row" id="ganttLegend"></div>
+
+                    <div class="gantt-wrap">
+                        <div class="gantt-row">
+                            <div class="gantt-label">Machine 1</div>
+                            <div class="gantt-track" id="gtrack0"></div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">Machine 2</div>
+                            <div class="gantt-track" id="gtrack1"></div>
+                        </div>
+                    </div>
+                    <div class="gantt-footer">Makespan (finish time): <b id="msLabel">—</b></div>
+
+                    <div class="explain" id="explainBox">Press Build Steps then Play or Step to watch the algorithm run.</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Pseudocode</div>
+                    <p style="color:#475569; font-size:12px; margin-bottom:8px;">The <span style="background:rgba(59,130,246,0.15); color:#93c5fd; padding:1px 5px; border-radius:3px;">highlighted line</span> is what is running right now.</p>
+                    <div class="code-block" id="codeBlock"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Statistics</div>
+                    <div class="stat-row"><span>Makespan</span><span id="statMakespan">—</span></div>
+                    <div class="stat-row"><span>Machine 1 load</span><span id="statM1">—</span></div>
+                    <div class="stat-row"><span>Machine 2 load</span><span id="statM2">—</span></div>
+                    <div class="stat-row"><span>Operations</span><span id="statOps">—</span></div>
+                    <div class="stat-row"><span>Algorithm</span><span id="statAlgo">—</span></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================== -->
+    <!-- TAB: COMPARE                                           -->
+    <!-- ====================================================== -->
+    <div id="tab-compare" style="display:none;">
+
+        <p style="color:#64748b; font-size:13px; margin-bottom:18px; line-height:1.7;">
+            Runs all three algorithms on the same jobs and shows the results side by side.
+            Change the jobs in the Visualizer tab first, then come back here and click Run.
+        </p>
+
+        <button class="btn btn-blue" onclick="runComparison()">Run Comparison</button>
+
+        <div id="cmpResult"></div>
+        <div id="cmpGantts"></div>
+
+    </div>
+
+</div>
+
+<footer>
+    BCS 309 &mdash; Algorithms I &nbsp;&bull;&nbsp; Spring 2026 &nbsp;&bull;&nbsp; Haider, Omer Nazar &nbsp;&bull;&nbsp; ID: 20230002922
+</footer>
+
+<script>
+
+let jobs = [];
+let steps = [];
+let currentStep = -1;
+let isPlaying = false;
+let playTimer = null;
+
+const presets = [
+    { jobs: [6, 5, 4, 3, 3, 2]  },
+    { jobs: [3, 3, 2, 2, 2]     },
+    { jobs: [7, 5, 4, 3, 2, 1]  },
+    { jobs: [10, 1, 1, 1, 1, 1] }
+];
+
+const pseudoLPT = [
+    { t: "LPT(jobs, m=2):",                       d: 0 },
+    { t: "  sort jobs from largest to smallest",   d: 1 },
+    { t: "  load[0] = 0,  load[1] = 0",           d: 1 },
+    { t: "  for each job in sorted order:",        d: 1 },
+    { t: "    find i = machine with min load[i]",  d: 2 },
+    { t: "    assign job to machine i",            d: 2 },
+    { t: "    load[i] = load[i] + job.time",       d: 2 },
+    { t: "  return max(load[0], load[1])",         d: 1 }
+];
+
+const pseudoBrute = [
+    { t: "BRUTE_FORCE(jobs, m=2):",                d: 0 },
+    { t: "  best = infinity",                      d: 1 },
+    { t: "  for mask = 0 to 2^n - 1:",             d: 1 },
+    { t: "    compute load[0] and load[1]",        d: 2 },
+    { t: "    ms = max(load[0], load[1])",         d: 2 },
+    { t: "    if ms < best:",                      d: 2 },
+    { t: "      best = ms    // new best!",        d: 3 },
+    { t: "      save this assignment",             d: 3 },
+    { t: "  return best",                          d: 1 }
+];
+
+const pseudoRandom = [
+    { t: "RANDOM_ASSIGN(jobs, m=2):",              d: 0 },
+    { t: "  load[0] = 0,  load[1] = 0",           d: 1 },
+    { t: "  for each job:",                        d: 1 },
+    { t: "    i = Math.random() < 0.5 ? 0 : 1",   d: 2 },
+    { t: "    assign job to machine i",            d: 2 },
+    { t: "    load[i] = load[i] + job.time",       d: 2 },
+    { t: "  return max(load[0], load[1])",         d: 1 }
+];
+
+function init() {
+    parseJobs();
+    renderChips();
+    renderGantt([], []);
+    renderPseudo(pseudoLPT, -1);
+    buildGrowthChart();
+    showPartitionCheck();
+}
+
+function parseJobs() {
+    let raw = document.getElementById('jobInput').value;
+    jobs = [];
+    let parts = raw.split(',');
+    for (let i = 0; i < parts.length; i++) {
+        let num = parseInt(parts[i].trim());
+        if (!isNaN(num) && num > 0) {
+            jobs.push(num);
+        }
+    }
+    if (jobs.length > 12) {
+        jobs = jobs.slice(0, 12);
+        document.getElementById('jobInput').value = jobs.join(', ');
+        setStatus("Capped at 12 jobs.", "warn");
+    }
+}
+
+function loadPreset(idx) {
+    document.getElementById('jobInput').value = presets[idx].jobs.join(', ');
+    parseJobs();
+    renderChips();
+    resetAll();
+}
+
+function onAlgoChange() {
+    let algo = document.getElementById('algoSelect').value;
+    if (algo === 'lpt')    renderPseudo(pseudoLPT, -1);
+    if (algo === 'brute')  renderPseudo(pseudoBrute, -1);
+    if (algo === 'random') renderPseudo(pseudoRandom, -1);
+    resetAll();
+}
+
+function renderChips() {
+    let area = document.getElementById('chipsArea');
+    area.innerHTML = '';
+    for (let i = 0; i < jobs.length; i++) {
+        let chip = document.createElement('div');
+        chip.className = 'chip c' + (i % 12);
+        chip.id = 'chip' + i;
+        chip.textContent = 'J' + (i + 1) + ': ' + jobs[i];
+        area.appendChild(chip);
+    }
+
+    let legend = document.getElementById('ganttLegend');
+    if (!legend) return;
+    legend.innerHTML = '';
+    for (let i = 0; i < jobs.length; i++) {
+        let item = document.createElement('div');
+        item.className = 'legend-item';
+
+        let dot = document.createElement('div');
+        dot.className = 'legend-dot c' + (i % 12);
+
+        let txt = document.createElement('span');
+        txt.textContent = 'J' + (i + 1) + '=' + jobs[i];
+
+        item.appendChild(dot);
+        item.appendChild(txt);
+        legend.appendChild(item);
+    }
+}
+
+function renderGantt(arr0, arr1) {
+    let load0 = 0, load1 = 0;
+    for (let i = 0; i < arr0.length; i++) load0 += arr0[i].time;
+    for (let i = 0; i < arr1.length; i++) load1 += arr1[i].time;
+
+    let total = Math.max(load0, load1, 1);
+    let t0 = document.getElementById('gtrack0');
+    let t1 = document.getElementById('gtrack1');
+    let trackW = t0.offsetWidth || 400;
+
+    t0.innerHTML = '';
+    t1.innerHTML = '';
+
+    function fillTrack(arr, track) {
+        for (let i = 0; i < arr.length; i++) {
+            let job = arr[i];
+            let block = document.createElement('div');
+            let w = Math.max(Math.round((job.time / total) * trackW), 6);
+            block.className = 'gantt-block c' + (job.idx % 12);
+            block.style.width = w + 'px';
+            if (w > 22) block.textContent = job.time;
+            track.appendChild(block);
+        }
+    }
+
+    fillTrack(arr0, t0);
+    fillTrack(arr1, t1);
+
+    let ms = Math.max(load0, load1);
+    document.getElementById('msLabel').textContent = (load0 > 0 || load1 > 0) ? ms : '—';
+    document.getElementById('statM1').textContent = load0;
+    document.getElementById('statM2').textContent = load1;
+    if (load0 > 0 || load1 > 0) {
+        document.getElementById('statMakespan').textContent = ms;
+    }
+}
+
+function renderPseudo(arr, activeLine) {
+    let box = document.getElementById('codeBlock');
+    box.innerHTML = '';
+    for (let i = 0; i < arr.length; i++) {
+        let row = document.createElement('div');
+        row.className = 'code-line' + (i === activeLine ? ' on' : '');
+
+        let num = document.createElement('span');
+        num.className = 'line-num';
+        num.textContent = String(i + 1).padStart(2, ' ') + ' ';
+
+        let text = document.createElement('span');
+        text.textContent = arr[i].t;
+
+        row.appendChild(num);
+        row.appendChild(text);
+        box.appendChild(row);
+    }
+}
+
+function setStatus(msg, type) {
+    let el = document.getElementById('statusMsg');
+    if (!el) return;
+    el.textContent = msg;
+    if (type === 'ok') {
+        el.style.background = '#f0fdf4';
+        el.style.color = '#166534';
+        el.style.border = '1px solid #bbf7d0';
+    } else if (type === 'warn') {
+        el.style.background = '#fffbeb';
+        el.style.color = '#92400e';
+        el.style.border = '1px solid #fde68a';
+    } else if (type === 'err') {
+        el.style.background = '#fff5f5';
+        el.style.color = '#991b1b';
+        el.style.border = '1px solid #fecaca';
+    } else {
+        el.style.background = '#f8fafc';
+        el.style.color = '#475569';
+        el.style.border = '1px solid #e2e8f0';
+    }
+}
+
+// -------------------------------------------------------
+// BUILD STEPS
+// -------------------------------------------------------
+
+function buildSteps() {
+    parseJobs();
+    if (jobs.length === 0) {
+        setStatus("Please enter some job times first.", "err");
+        return;
+    }
+
+    clearInterval(playTimer);
+    isPlaying = false;
+    document.getElementById('playBtn').textContent = 'Play';
+
+    steps = [];
+    currentStep = -1;
+    renderGantt([], []);
+    renderChips();
+
+    let algo = document.getElementById('algoSelect').value;
+    if (algo === 'lpt')    buildLPTSteps();
+    if (algo === 'brute')  buildBruteSteps();
+    if (algo === 'random') buildRandomSteps();
+
+    document.getElementById('totalSteps').textContent = steps.length;
+    document.getElementById('stepNum').textContent = 0;
+    document.getElementById('statOps').textContent = 0;
+    document.getElementById('statAlgo').textContent = algo.toUpperCase();
+    setStatus("Ready — " + steps.length + " steps built. Press Play or Step.", "ok");
+}
+
+function buildLPTSteps() {
+    let sorted = [];
+    for (let i = 0; i < jobs.length; i++) {
+        sorted.push({ time: jobs[i], idx: i });
+    }
+    sorted.sort(function(a, b) { return b.time - a.time; });
+
+    steps.push({
+        line: 1, m0: [], m1: [], hl: -1, ops: 1,
+        msg: "Sort jobs largest first: [" + sorted.map(function(j) { return j.time; }).join(', ') + "]"
+    });
+
+    steps.push({
+        line: 2, m0: [], m1: [], hl: -1, ops: 2,
+        msg: "Initialize load[0] = 0 and load[1] = 0."
+    });
+
+    let m0 = [], m1 = [], l0 = 0, l1 = 0, ops = 2;
+
+    for (let i = 0; i < sorted.length; i++) {
+        let job = sorted[i];
+
+        steps.push({
+            line: 3,
+            m0: m0.slice(), m1: m1.slice(),
+            hl: job.idx, ops: ++ops,
+            msg: "Looking at J" + (job.idx + 1) + " (time=" + job.time + "). Loads: M1=" + l0 + ", M2=" + l1
+        });
+
+        let pick = (l0 <= l1) ? 0 : 1;
+
+        steps.push({
+            line: 4,
+            m0: m0.slice(), m1: m1.slice(),
+            hl: job.idx, ops: ++ops,
+            msg: "Machine " + (pick + 1) + " has the smaller load (" + (pick === 0 ? l0 : l1) + "). Assigning J" + (job.idx + 1) + " there."
+        });
+
+        if (pick === 0) {
+            m0.push({ time: job.time, idx: job.idx });
+            l0 += job.time;
+        } else {
+            m1.push({ time: job.time, idx: job.idx });
+            l1 += job.time;
+        }
+
+        steps.push({
+            line: 6,
+            m0: m0.slice(), m1: m1.slice(),
+            hl: job.idx, ops: ++ops,
+            msg: "Updated. Loads are now: M1=" + l0 + ", M2=" + l1
+        });
+    }
+
+    steps.push({
+        line: 7,
+        m0: m0.slice(), m1: m1.slice(),
+        hl: -1, ops: ++ops,
+        msg: "Done! Makespan = max(" + l0 + ", " + l1 + ") = " + Math.max(l0, l1)
+    });
+}
+
+function buildBruteSteps() {
+    let n = jobs.length;
+    let totalCombinations = Math.pow(2, n);
+
+    steps.push({
+        line: 1, m0: [], m1: [], hl: -1, ops: 1,
+        msg: "Brute force: will check all 2^" + n + " = " + totalCombinations + " assignments."
+    });
+
+    let best = Infinity;
+    let bestM0 = [], bestM1 = [];
+    let ops = 1;
+
+    for (let mask = 0; mask < totalCombinations; mask++) {
+        let m0 = [], m1 = [], l0 = 0, l1 = 0;
+
+        for (let i = 0; i < n; i++) {
+            if ((mask >> i) & 1) {
+                m1.push({ time: jobs[i], idx: i });
+                l1 += jobs[i];
+            } else {
+                m0.push({ time: jobs[i], idx: i });
+                l0 += jobs[i];
+            }
+        }
+
+        let ms = Math.max(l0, l1);
+        ops++;
+        let gotBetter = ms < best;
+
+        if (gotBetter) {
+            best = ms;
+            bestM0 = m0.slice();
+            bestM1 = m1.slice();
+        }
+
+        if (mask < 6 || gotBetter) {
+            steps.push({
+                line: gotBetter ? 6 : 4,
+                m0: gotBetter ? bestM0.slice() : m0,
+                m1: gotBetter ? bestM1.slice() : m1,
+                hl: -1, ops: ops,
+                msg: "Assignment " + (mask + 1) + "/" + totalCombinations + ": M1=" + l0 + ", M2=" + l1 + ", makespan=" + ms + (gotBetter ? " — NEW BEST!" : "")
+            });
+        }
+    }
+
+    steps.push({
+        line: 8,
+        m0: bestM0.slice(), m1: bestM1.slice(),
+        hl: -1, ops: ops,
+        msg: "Done! Optimal makespan = " + best + " (checked all " + totalCombinations + " assignments)."
+    });
+}
+
+function buildRandomSteps() {
+    let m0 = [], m1 = [], l0 = 0, l1 = 0, ops = 0;
+
+    steps.push({
+        line: 1, m0: [], m1: [], hl: -1, ops: 0,
+        msg: "Random assignment: each job goes to Machine 1 or 2 at random."
+    });
+
+    for (let i = 0; i < jobs.length; i++) {
+        let pick = Math.random() < 0.5 ? 0 : 1;
+        ops++;
+
+        steps.push({
+            line: 3,
+            m0: m0.slice(), m1: m1.slice(),
+            hl: i, ops: ops,
+            msg: "J" + (i + 1) + " (time=" + jobs[i] + "): randomly chose Machine " + (pick + 1)
+        });
+
+        if (pick === 0) {
+            m0.push({ time: jobs[i], idx: i });
+            l0 += jobs[i];
+        } else {
+            m1.push({ time: jobs[i], idx: i });
+            l1 += jobs[i];
+        }
+
+        steps.push({
+            line: 5,
+            m0: m0.slice(), m1: m1.slice(),
+            hl: i, ops: ops,
+            msg: "Assigned to Machine " + (pick + 1) + ". Loads: M1=" + l0 + ", M2=" + l1
+        });
+    }
+
+    steps.push({
+        line: 6,
+        m0: m0.slice(), m1: m1.slice(),
+        hl: -1, ops: ops,
+        msg: "Random done. Makespan = " + Math.max(l0, l1) + " (usually not optimal)"
+    });
+}
+
+// -------------------------------------------------------
+// ANIMATION
+// -------------------------------------------------------
+
+function applyStep(idx) {
+    if (idx < 0 || idx >= steps.length) return;
+
+    let s = steps[idx];
+    let algo = document.getElementById('algoSelect').value;
+    let pseudo = pseudoLPT;
+    if (algo === 'brute')  pseudo = pseudoBrute;
+    if (algo === 'random') pseudo = pseudoRandom;
+
+    renderGantt(s.m0, s.m1);
+    renderPseudo(pseudo, s.line);
+
+    document.getElementById('explainBox').textContent = s.msg;
+    document.getElementById('stepNum').textContent = idx + 1;
+    document.getElementById('statOps').textContent = s.ops;
+
+    for (let i = 0; i < jobs.length; i++) {
+        let chip = document.getElementById('chip' + i);
+        if (!chip) continue;
+        if (i === s.hl) chip.classList.add('lit');
+        else chip.classList.remove('lit');
+    }
+
+    if (idx === steps.length - 1) {
+        setStatus("Complete! " + s.msg, "ok");
+    }
+}
+
+function doStep() {
+    if (steps.length === 0) { buildSteps(); return; }
+    if (currentStep >= steps.length - 1) {
+        setStatus("Already at the last step.", "warn");
+        return;
+    }
+    currentStep++;
+    applyStep(currentStep);
+}
+
+function togglePlay() {
+    if (steps.length === 0) { buildSteps(); }
+
+    if (isPlaying) {
+        isPlaying = false;
+        clearInterval(playTimer);
+        document.getElementById('playBtn').textContent = 'Play';
+        setStatus("Paused at step " + (currentStep + 1) + ".", "warn");
+    } else {
+        isPlaying = true;
+        document.getElementById('playBtn').textContent = 'Pause';
+
+        let speed = parseInt(document.getElementById('speedSlider').value);
+        let delay = 1100 - (speed * 100);
+
+        playTimer = setInterval(function() {
+            currentStep++;
+            if (currentStep >= steps.length) {
+                currentStep = steps.length - 1;
+                isPlaying = false;
+                clearInterval(playTimer);
+                document.getElementById('playBtn').textContent = 'Play';
+                setStatus("Playback complete!", "ok");
+                return;
+            }
+            applyStep(currentStep);
+        }, delay);
+    }
+}
+
+function resetAll() {
+    clearInterval(playTimer);
+    isPlaying = false;
+    document.getElementById('playBtn').textContent = 'Play';
+
+    steps = [];
+    currentStep = -1;
+
+    renderGantt([], []);
+    let algo = document.getElementById('algoSelect').value;
+    if (algo === 'lpt')    renderPseudo(pseudoLPT, -1);
+    if (algo === 'brute')  renderPseudo(pseudoBrute, -1);
+    if (algo === 'random') renderPseudo(pseudoRandom, -1);
+
+    document.getElementById('stepNum').textContent = 0;
+    document.getElementById('totalSteps').textContent = 0;
+    document.getElementById('statMakespan').textContent = '—';
+    document.getElementById('statM1').textContent = '—';
+    document.getElementById('statM2').textContent = '—';
+    document.getElementById('statOps').textContent = '—';
+    document.getElementById('msLabel').textContent = '—';
+    document.getElementById('explainBox').textContent = 'Press Build Steps then Play or Step to watch the algorithm run.';
+
+    setStatus("Reset — press Build Steps to start.");
+
+    for (let i = 0; i < jobs.length; i++) {
+        let chip = document.getElementById('chip' + i);
+        if (chip) chip.classList.remove('lit');
+    }
+}
+
+// -------------------------------------------------------
+// COMPARISON
+// -------------------------------------------------------
+
+function lptCompute(jList) {
+    let sorted = jList.slice().sort(function(a, b) { return b - a; });
+    let l0 = 0, l1 = 0, ops = sorted.length + 1;
+    for (let i = 0; i < sorted.length; i++) {
+        if (l0 <= l1) l0 += sorted[i];
+        else l1 += sorted[i];
+        ops++;
+    }
+    return { ms: Math.max(l0, l1), l0: l0, l1: l1, ops: ops };
+}
+
+function bruteCompute(jList) {
+    let n = jList.length;
+    let total = Math.pow(2, n);
+    let best = Infinity, bestL0 = 0, bestL1 = 0;
+
+    for (let mask = 0; mask < total; mask++) {
+        let l0 = 0, l1 = 0;
+        for (let i = 0; i < n; i++) {
+            if ((mask >> i) & 1) l1 += jList[i];
+            else l0 += jList[i];
+        }
+        let ms = Math.max(l0, l1);
+        if (ms < best) {
+            best = ms;
+            bestL0 = l0;
+            bestL1 = l1;
+        }
+    }
+    return { ms: best, l0: bestL0, l1: bestL1, ops: total };
+}
+
+function randomCompute(jList) {
+    let l0 = 0, l1 = 0;
+    for (let i = 0; i < jList.length; i++) {
+        if (Math.random() < 0.5) l0 += jList[i];
+        else l1 += jList[i];
+    }
+    return { ms: Math.max(l0, l1), l0: l0, l1: l1, ops: jList.length };
+}
+
+function runComparison() {
+    parseJobs();
+    if (jobs.length === 0) {
+        document.getElementById('cmpResult').innerHTML = '<p style="color:#ef4444; margin-top:10px;">No jobs — enter some in the Visualizer tab first.</p>';
+        return;
+    }
+
+    let bf  = bruteCompute(jobs);
+    let lpt = lptCompute(jobs);
+    let rnd = randomCompute(jobs);
+    let opt = bf.ms;
+
+    let rows = [
+        { name: 'Brute Force (Exact)', r: bf },
+        { name: 'LPT (Greedy)',        r: lpt },
+        { name: 'Random',              r: rnd }
+    ];
+
+    let html = '<table class="cmp-table"><tr><th>Algorithm</th><th>M1 Load</th><th>M2 Load</th><th>Makespan</th><th>Operations</th><th>Ratio to Optimal</th></tr>';
+
+    for (let i = 0; i < rows.length; i++) {
+        let row = rows[i];
+        let isOpt = row.r.ms === opt;
+        let ratio = (row.r.ms / opt).toFixed(3);
+        html += '<tr' + (isOpt ? ' class="opt-row"' : '') + '>';
+        html += '<td>' + row.name + '</td><td>' + row.r.l0 + '</td><td>' + row.r.l1 + '</td>';
+        html += '<td>' + row.r.ms + (isOpt ? ' &#10003;' : '') + '</td>';
+        html += '<td>' + row.r.ops + '</td><td>' + ratio + 'x</td></tr>';
+    }
+    html += '</table>';
+
+    let lptRatio = (lpt.ms / opt).toFixed(3);
+    html += '<div class="note" style="margin-top:12px;"><b>LPT Guarantee:</b> makespan &le; 7/6 &times; OPT &asymp; 1.167&times; OPT for m=2. ';
+    if (lpt.ms === opt) {
+        html += 'On this input LPT found the <b style="color:#4ade80;">optimal solution</b>.';
+    } else {
+        html += 'Here LPT is <b>' + lptRatio + 'x</b> the optimal — within the 1.167 bound.';
+    }
+    html += '</div>';
+
+    document.getElementById('cmpResult').innerHTML = html;
+    buildSideBySideGantt(bf, lpt, rnd);
+}
+
+function buildSideBySideGantt(bf, lpt, rnd) {
+    let container = document.getElementById('cmpGantts');
+    if (!container) return;
+
+    let algos = [
+        { name: 'Brute Force', r: bf, color: '#ef4444' },
+        { name: 'LPT (Greedy)', r: lpt, color: '#3b82f6' },
+        { name: 'Random', r: rnd, color: '#a855f7' }
+    ];
+
+    let html = '<div style="color:#64748b; font-size:12px; margin:16px 0 8px;">Side-by-side Gantt:</div>';
+    html += '<div class="cmp-grid">';
+
+    for (let a = 0; a < algos.length; a++) {
+        let algo = algos[a];
+        let total = Math.max(algo.r.ms, 1);
+        let pct1 = Math.round((algo.r.l0 / total) * 100);
+        let pct2 = Math.round((algo.r.l1 / total) * 100);
+
+        html += '<div class="cmp-col">';
+        html += '<div class="cmp-col-title">' + algo.name + ' &mdash; makespan <b>' + algo.r.ms + '</b></div>';
+
+        html += '<div class="mini-row"><div class="mini-label">Machine 1</div><div class="mini-track"><div class="mini-block" style="width:' + pct1 + '%; background:' + algo.color + ';">' + (pct1 > 10 ? algo.r.l0 : '') + '</div></div></div>';
+        html += '<div class="mini-row"><div class="mini-label">Machine 2</div><div class="mini-track"><div class="mini-block" style="width:' + pct2 + '%; background:' + algo.color + '; opacity:0.65;">' + (pct2 > 10 ? algo.r.l1 : '') + '</div></div></div>';
+        html += '<div class="mini-footer">M1=' + algo.r.l0 + ' &nbsp; M2=' + algo.r.l1 + '</div>';
+        html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// -------------------------------------------------------
+// PARTITION LIVE CHECK
+// -------------------------------------------------------
+
+function showPartitionCheck() {
+    let box = document.getElementById('partitionLive');
+    if (!box) return;
+
+    parseJobs();
+    let total = 0;
+    for (let i = 0; i < jobs.length; i++) total += jobs[i];
+    let T = total / 2;
+
+    let html = '<div class="proof-step" style="margin-top:12px;">';
+    html += '<h4>Live Partition Check &mdash; Current Jobs</h4>';
+    html += '<p>Jobs: [' + jobs.join(', ') + ']</p>';
+    html += '<p>Total sum = ' + total + ', so T = ' + T + '</p>';
+
+    if (total % 2 !== 0) {
+        html += '<p style="color:#f87171; margin-top:8px;">Sum is odd &rarr; Partition is impossible.</p>';
+    } else {
+        let res = bruteCompute(jobs);
+        if (res.ms <= T) {
+            html += '<p style="color:#4ade80; margin-top:8px;">Optimal makespan = ' + res.ms + ' &le; T = ' + T + ' &rarr; Partition IS possible (YES instance)</p>';
+            html += '<p style="margin-top:4px;">M1 total = ' + res.l0 + ', M2 total = ' + res.l1 + '</p>';
+        } else {
+            html += '<p style="color:#f87171; margin-top:8px;">Optimal makespan = ' + res.ms + ' &gt; T = ' + T + ' &rarr; Partition NOT possible (NO instance)</p>';
+        }
+    }
+    html += '</div>';
+    box.innerHTML = html;
+}
+
+// -------------------------------------------------------
+// GROWTH CHART
+// -------------------------------------------------------
+
+function buildGrowthChart() {
+    let chart = document.getElementById('growthChart');
+    let maxN = 12;
+    let maxOps = Math.pow(2, maxN);
+    let html = '';
+
+    for (let n = 1; n <= maxN; n++) {
+        let bruteOps = Math.pow(2, n);
+        let lptOps = Math.ceil(n * (Math.log(n + 1) / Math.log(2))) + n * 2;
+        let bw = Math.round((bruteOps / maxOps) * 100);
+        let lw = Math.max(Math.round((lptOps / maxOps) * 100), 1);
+
+        html += '<div class="g-row"><div class="g-label">n = ' + n + '</div>';
+        html += '<div class="g-bars">';
+        html += '<div class="g-track"><div class="g-fill" style="width:' + bw + '%; background:#ef4444;"></div></div>';
+        html += '<div class="g-track"><div class="g-fill" style="width:' + lw + '%; background:#22c55e;"></div></div>';
+        html += '</div><div class="g-nums">' + bruteOps + ' / ~' + lptOps + '</div></div>';
+    }
+    chart.innerHTML = html;
+}
+
+// -------------------------------------------------------
+// TAB SWITCHING
+// -------------------------------------------------------
+
+function switchTab(name) {
+    var allNames = ['overview', 'proof', 'visualizer', 'compare'];
+    for (var i = 0; i < allNames.length; i++) {
+        document.getElementById('tab-' + allNames[i]).style.display = 'none';
+        document.getElementById('tabBtn-' + allNames[i]).classList.remove('active-tab');
+    }
+    document.getElementById('tab-' + name).style.display = 'block';
+    document.getElementById('tabBtn-' + name).classList.add('active-tab');
+
+    if (name === 'proof') {
+        showPartitionCheck();
+    }
+}
+
+window.onload = init;
+
+</script>
+</body>
+</html>
