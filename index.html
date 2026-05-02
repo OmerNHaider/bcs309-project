@@ -654,6 +654,35 @@
             </div>
         </div>
 
+        <!-- Complexity table -->
+        <h3 class="sec">Algorithm Complexity Comparison</h3>
+        <p style="color:#64748b; font-size:13px; margin-bottom:14px;">This is why LPT is preferred over brute force in practice — the time cost is vastly different.</p>
+        <table class="worked-table" style="width:100%; margin-bottom:8px;">
+            <tr><th>Algorithm</th><th>Time Complexity</th><th>For n=20 jobs</th><th>Gives Optimal?</th><th>Practical?</th></tr>
+            <tr>
+                <td><b>Brute Force</b></td>
+                <td>O(n &middot; 2<sup>n</sup>)</td>
+                <td style="color:#f87171; font-weight:700;">~20 million ops</td>
+                <td style="color:#4ade80;">Always &#10003;</td>
+                <td style="color:#f87171;">No &mdash; explodes fast</td>
+            </tr>
+            <tr>
+                <td><b>LPT (Greedy)</b></td>
+                <td>O(n log n)</td>
+                <td style="color:#4ade80; font-weight:700;">~86 ops</td>
+                <td style="color:#fbbf24;">Within 7/6 &times; OPT</td>
+                <td style="color:#4ade80;">Yes &#10003;</td>
+            </tr>
+            <tr>
+                <td><b>Random</b></td>
+                <td>O(n)</td>
+                <td style="color:#4ade80; font-weight:700;">20 ops</td>
+                <td style="color:#f87171;">No guarantee</td>
+                <td style="color:#fbbf24;">Baseline only</td>
+            </tr>
+        </table>
+        <div class="note" style="margin-bottom:24px;">The hardness of NP-complete problems is why we accept a 7/6 approximation — a polynomial-time exact algorithm for this problem would imply P = NP.</div>
+
         <!-- Worked examples -->
         <h3 class="sec">Worked Examples &mdash; LPT Step-by-Step</h3>
         <p>Two hand-traced examples: one where LPT finds the optimal, one where it does not.</p>
@@ -725,6 +754,13 @@
                         <div class="proof-step">
                             <h4>Backward &mdash; Scheduling YES &rarr; Partition YES</h4>
                             <p>If makespan &le; T, both machines have load &le; T. Total load = 2T. The only way two values are each &le; T and sum to 2T is if both equal exactly T. So the assignments form a valid partition. &#10003;</p>
+                            <div style="background:#fef9c3; border:1px solid #fde047; border-radius:8px; padding:12px 14px; margin-top:10px; font-size:12px; color:#713f12; line-height:1.8;">
+                                <b>Why this logic works (step by step):</b><br>
+                                &bull; &nbsp; load(M1) + load(M2) = total = 2T &nbsp;&nbsp; <i>(all jobs assigned)</i><br>
+                                &bull; &nbsp; load(M1) &le; T &nbsp;and&nbsp; load(M2) &le; T &nbsp;&nbsp; <i>(makespan &le; T)</i><br>
+                                &bull; &nbsp; Two numbers each &le; T that sum to 2T must both equal <b>exactly T</b><br>
+                                &bull; &nbsp; Therefore the jobs on M1 sum to T and the jobs on M2 sum to T &rarr; <b>valid partition</b> &#10003;
+                            </div>
                         </div>
                         <div class="proof-step">
                             <h4>Why m = 1 Is in P</h4>
@@ -757,6 +793,10 @@
                         </div>
                     </div>
                 </div>
+
+                <h3 class="sec" style="margin-top:28px; font-size:14px; font-weight:700; color:#1e293b; border-bottom:2px solid #e2e8f0; padding-bottom:8px;">Live Reduction Diagram</h3>
+                <p style="color:#64748b; font-size:13px; margin:10px 0 16px;">The reduction applied to the jobs currently loaded in the Visualizer — showing every step of the mapping from Partition to Job Scheduling.</p>
+                <div id="reductionViz"></div>
             </div>
         </details>
 
@@ -945,7 +985,7 @@
     <div id="tab-compare" style="display:none;">
 
         <p style="color:#64748b; font-size:13px; margin-bottom:18px; line-height:1.7;">
-            Runs all three algorithms on the same jobs and shows the results side by side.
+            Runs all four configurations on the same jobs and shows results side by side — including <b>LPT without sorting</b> to demonstrate exactly what breaks when the sort step is removed.
             Change the jobs in the Visualizer tab first, then come back here and click Run.
         </p>
 
@@ -1471,6 +1511,16 @@ function lptCompute(jList) {
     return { ms: Math.max(l0, l1), l0: l0, l1: l1, ops: ops };
 }
 
+function lptNoSortCompute(jList) {
+    let l0 = 0, l1 = 0, ops = jList.length;
+    for (let i = 0; i < jList.length; i++) {
+        if (l0 <= l1) l0 += jList[i];
+        else l1 += jList[i];
+        ops++;
+    }
+    return { ms: Math.max(l0, l1), l0: l0, l1: l1, ops: ops };
+}
+
 function bruteCompute(jList) {
     let n = jList.length;
     let total = Math.pow(2, n);
@@ -1508,37 +1558,62 @@ function runComparison() {
         return;
     }
 
-    let bf  = bruteCompute(jobs);
-    let lpt = lptCompute(jobs);
-    let rnd = randomCompute(jobs);
-    let opt = bf.ms;
+    let bf      = bruteCompute(jobs);
+    let lpt     = lptCompute(jobs);
+    let lptNS   = lptNoSortCompute(jobs);
+    let rnd     = randomCompute(jobs);
+    let opt     = bf.ms;
 
     let rows = [
-        { name: 'Brute Force (Exact)', r: bf },
-        { name: 'LPT (Greedy)',        r: lpt },
-        { name: 'Random',              r: rnd }
+        { name: 'Brute Force (Exact)',        r: bf,    note: 'O(n &middot; 2<sup>n</sup>)' },
+        { name: 'LPT &mdash; with sorting',   r: lpt,   note: 'O(n log n)' },
+        { name: 'LPT &mdash; no sorting &#9888;', r: lptNS, note: 'O(n)' },
+        { name: 'Random',                     r: rnd,   note: 'O(n)' }
     ];
 
-    let html = '<table class="cmp-table"><tr><th>Algorithm</th><th>M1 Load</th><th>M2 Load</th><th>Makespan</th><th>Operations</th><th>Ratio to Optimal</th></tr>';
+    let html = '<table class="cmp-table"><tr><th>Algorithm</th><th>Complexity</th><th>M1</th><th>M2</th><th>Makespan</th><th>Ratio to OPT</th></tr>';
 
     for (let i = 0; i < rows.length; i++) {
         let row = rows[i];
         let isOpt = row.r.ms === opt;
         let ratio = (row.r.ms / opt).toFixed(3);
-        html += '<tr' + (isOpt ? ' class="opt-row"' : '') + '>';
-        html += '<td>' + row.name + '</td><td>' + row.r.l0 + '</td><td>' + row.r.l1 + '</td>';
-        html += '<td>' + row.r.ms + (isOpt ? ' &#10003;' : '') + '</td>';
-        html += '<td>' + row.r.ops + '</td><td>' + ratio + 'x</td></tr>';
+        let isNS = i === 2;
+        html += '<tr' + (isOpt ? ' class="opt-row"' : (isNS ? ' style="background:#fff7ed;"' : '')) + '>';
+        html += '<td>' + row.name + '</td>';
+        html += '<td style="font-family:monospace; font-size:12px;">' + row.note + '</td>';
+        html += '<td>' + row.r.l0 + '</td><td>' + row.r.l1 + '</td>';
+        html += '<td><b>' + row.r.ms + '</b>' + (isOpt ? ' &#10003;' : '') + '</td>';
+        let ratioColor = parseFloat(ratio) <= 1.0 ? '#4ade80' : (parseFloat(ratio) <= 1.167 ? '#fbbf24' : '#f87171');
+        html += '<td style="color:' + ratioColor + '; font-weight:700;">' + ratio + 'x</td></tr>';
     }
     html += '</table>';
 
-    let lptRatio = (lpt.ms / opt).toFixed(3);
-    html += '<div class="note" style="margin-top:12px;"><b>LPT Guarantee:</b> makespan &le; 7/6 &times; OPT &asymp; 1.167&times; OPT for m=2. ';
-    if (lpt.ms === opt) {
-        html += 'On this input LPT found the <b style="color:#4ade80;">optimal solution</b>.';
+    // "what breaks without sorting" callout
+    if (lptNS.ms > lpt.ms) {
+        html += '<div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:13px 16px; margin-top:12px; font-size:13px; color:#92400e; line-height:1.7;">';
+        html += '<b>&#9888; What breaks without sorting:</b> Without sorting, LPT assigned jobs in input order and got makespan <b>' + lptNS.ms + '</b>. ';
+        html += 'With sorting it gets <b>' + lpt.ms + '</b>. ';
+        html += 'Sorting ensures the biggest jobs go first, which balances the machines better. Skipping it breaks the 7/6 approximation guarantee.';
+        html += '</div>';
     } else {
-        html += 'Here LPT is <b>' + lptRatio + 'x</b> the optimal — within the 1.167 bound.';
+        html += '<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:13px 16px; margin-top:12px; font-size:13px; color:#15803d; line-height:1.7;">';
+        html += '<b>Note:</b> On this particular input, LPT without sorting still gives the same makespan (' + lptNS.ms + '). Try the counterexample preset (jobs: 3,3,2,2,2) to see sorting matter.';
+        html += '</div>';
     }
+
+    // Approximation ratio visual meter
+    let lptRatio = lpt.ms / opt;
+    let bound = 7/6;
+    let meterPct = Math.min(((lptRatio - 1) / (bound - 1)) * 100, 100);
+    html += '<div style="margin-top:18px;">';
+    html += '<div style="font-size:13px; font-weight:700; color:#1e293b; margin-bottom:8px;">LPT Approximation Ratio Meter</div>';
+    html += '<div style="font-size:12px; color:#64748b; margin-bottom:10px;">Where does this run fall between optimal (1.0&times;) and the theoretical worst case (7/6 &asymp; 1.167&times;)?</div>';
+    html += '<div style="position:relative; background:#e2e8f0; border-radius:999px; height:20px; overflow:hidden;">';
+    html += '<div style="position:absolute; left:0; top:0; height:100%; width:' + meterPct + '%; background:' + (lptRatio <= 1.0 ? '#22c55e' : (lptRatio <= 1.1 ? '#4ade80' : '#fbbf24')) + '; border-radius:999px; transition:width 0.4s;"></div>';
+    html += '</div>';
+    html += '<div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; margin-top:4px;">';
+    html += '<span>1.0&times; (optimal)</span><span style="color:#fbbf24; font-weight:700;">LPT = ' + lptRatio.toFixed(3) + '&times;</span><span>7/6 = 1.167&times; (bound)</span>';
+    html += '</div>';
     html += '</div>';
 
     document.getElementById('cmpResult').innerHTML = html;
@@ -1610,6 +1685,199 @@ function showPartitionCheck() {
 }
 
 // -------------------------------------------------------
+// REDUCTION VISUALIZATION
+// -------------------------------------------------------
+
+function buildReductionViz() {
+    var viz = document.getElementById('reductionViz');
+    if (!viz) return;
+
+    parseJobs();
+
+    if (jobs.length === 0) {
+        viz.innerHTML = '<p style="color:#94a3b8; font-size:13px;">No jobs loaded — go to the Visualizer tab, enter some job times, then come back here.</p>';
+        return;
+    }
+
+    var colors = ['#ef4444','#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#ea580c','#65a30d','#db2777','#6d28d9','#0d9488','#be123c'];
+
+    var total = 0;
+    for (var i = 0; i < jobs.length; i++) total += jobs[i];
+    var T = total / 2;
+
+    var isYes = (total % 2 === 0);
+    var res = null;
+    var m1Jobs = [], m2Jobs = [];
+    var bestMask = 0;
+
+    if (isYes) {
+        res = bruteCompute(jobs);
+        isYes = res.ms <= T;
+        if (isYes) {
+            var n = jobs.length;
+            var bestMs = Infinity;
+            for (var mask = 0; mask < Math.pow(2, n); mask++) {
+                var l0 = 0, l1 = 0;
+                for (var b = 0; b < n; b++) {
+                    if ((mask >> b) & 1) l1 += jobs[b]; else l0 += jobs[b];
+                }
+                var ms = Math.max(l0, l1);
+                if (ms < bestMs) { bestMs = ms; bestMask = mask; }
+            }
+            for (var j = 0; j < jobs.length; j++) {
+                if ((bestMask >> j) & 1) m2Jobs.push(j); else m1Jobs.push(j);
+            }
+        }
+    }
+
+    var stepStyle = 'background:#ffffff; border:2px solid #e2e8f0; border-radius:12px; padding:20px 22px; position:relative;';
+    var stepNumStyle = 'display:inline-block; background:#1e3a8a; color:#fff; border-radius:50%; width:26px; height:26px; line-height:26px; text-align:center; font-size:12px; font-weight:700; margin-right:10px;';
+    var stepTitleStyle = 'font-size:14px; font-weight:700; color:#1e293b; display:inline;';
+    var stepDescStyle = 'font-size:13px; color:#64748b; margin:8px 0 14px; line-height:1.6;';
+    var connectorStyle = 'display:flex; flex-direction:column; align-items:center; padding:4px 0; gap:2px;';
+
+    var html = '<div style="display:flex; flex-direction:column; gap:0;">';
+
+    // ── STEP 1: PARTITION PROBLEM ──────────────────────────────
+    html += '<div style="' + stepStyle + ' border-color:#1e3a8a;">';
+    html += '<div><span style="' + stepNumStyle + '">1</span><span style="' + stepTitleStyle + ' color:#1e3a8a;">Start: the Partition Problem (the known hard problem)</span></div>';
+    html += '<p style="' + stepDescStyle + '">We are given a set of numbers. The question is: <b>can we split them into two groups with equal sums?</b> This problem is known to be NP-complete.</p>';
+
+    html += '<div style="background:#f1f5f9; border-radius:10px; padding:14px 16px;">';
+    html += '<div style="font-size:12px; color:#64748b; margin-bottom:10px; font-weight:600;">Input set S = { ' + jobs.join(', ') + ' }</div>';
+    html += '<div style="display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px;">';
+    for (var i = 0; i < jobs.length; i++) {
+        html += '<div style="background:' + colors[i % colors.length] + '; color:#fff; border-radius:8px; padding:8px 13px; font-size:15px; font-weight:700; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.15);">' + jobs[i] + '</div>';
+    }
+    html += '</div>';
+    html += '<div style="display:flex; gap:20px; font-size:13px; color:#475569;">';
+    html += '<span>Total sum = <b>' + total + '</b></span>';
+    html += '<span>T = ' + total + ' &divide; 2 = <b>' + T + '</b></span>';
+    html += '</div>';
+    html += '<div style="margin-top:10px; padding:8px 12px; border-radius:7px; font-size:13px; font-weight:600; background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe;">';
+    html += '&#10067; &nbsp; Can we split these numbers into two groups that each add up to <b>' + T + '</b>?';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    // connector
+    html += '<div style="' + connectorStyle + '">';
+    html += '<div style="width:2px; height:10px; background:#94a3b8;"></div>';
+    html += '<div style="background:#2563eb; color:#fff; border-radius:20px; padding:5px 16px; font-size:12px; font-weight:700;">CONSTRUCTION &nbsp; f(x) &nbsp; runs in O(n)</div>';
+    html += '<div style="font-size:11px; color:#94a3b8; margin:3px 0; text-align:center; line-height:1.6;">Each number a<sub>i</sub> becomes a job with processing time p<sub>i</sub> = a<sub>i</sub><br>Set m = 2 machines &nbsp;&nbsp; Set deadline D = T</div>';
+    html += '<div style="width:2px; height:10px; background:#94a3b8;"></div>';
+    html += '</div>';
+
+    // ── STEP 2: JOB SCHEDULING INSTANCE ───────────────────────
+    html += '<div style="' + stepStyle + ' border-color:#2563eb;">';
+    html += '<div><span style="' + stepNumStyle + ' background:#2563eb;">2</span><span style="' + stepTitleStyle + ' color:#2563eb;">Result: the Job Scheduling Instance (our problem)</span></div>';
+    html += '<p style="' + stepDescStyle + '">Each number from the set became a job. We have 2 machines and must finish all jobs. The question becomes: <b>can we assign all jobs so no machine runs longer than D = ' + T + '?</b></p>';
+
+    html += '<div style="background:#f1f5f9; border-radius:10px; padding:14px 16px;">';
+
+    // mapping table
+    html += '<div style="font-size:12px; color:#64748b; font-weight:600; margin-bottom:10px;">The mapping (same color = same value):</div>';
+    html += '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">';
+    for (var i = 0; i < jobs.length; i++) {
+        html += '<div style="display:flex; flex-direction:column; align-items:center; gap:3px;">';
+        html += '<div style="background:' + colors[i % colors.length] + '22; border:2px solid ' + colors[i % colors.length] + '; border-radius:6px; padding:3px 8px; font-size:11px; color:#475569; font-weight:600;">a<sub>' + (i+1) + '</sub> = ' + jobs[i] + '</div>';
+        html += '<div style="font-size:10px; color:#94a3b8;">&#8595;</div>';
+        html += '<div style="background:' + colors[i % colors.length] + '; color:#fff; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:700;">job ' + (i+1) + ' = ' + jobs[i] + '</div>';
+        html += '</div>';
+    }
+    html += '</div>';
+
+    // Gantt
+    html += '<div style="font-size:12px; color:#64748b; font-weight:600; margin-bottom:10px;">Optimal assignment on 2 machines (Gantt chart):</div>';
+
+    if (isYes) {
+        var ganttW = 300;
+        var labelW = 36;
+        var barW = ganttW - labelW - 10;
+        var scale = barW / total;
+        var svgH = 100;
+
+        html += '<svg width="100%" viewBox="0 0 ' + ganttW + ' ' + svgH + '" style="display:block; max-width:420px;">';
+
+        // deadline line
+        var dlineX = labelW + T * scale;
+        html += '<line x1="' + dlineX + '" y1="0" x2="' + dlineX + '" y2="' + svgH + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>';
+        html += '<text x="' + (dlineX + 3) + '" y="10" font-size="9" fill="#ef4444" font-family="inherit" font-weight="700">D=' + T + '</text>';
+
+        // M1
+        html += '<text x="0" y="26" font-size="11" fill="#475569" font-family="inherit" font-weight="600">M1</text>';
+        var x1 = labelW;
+        for (var k = 0; k < m1Jobs.length; k++) {
+            var jIdx = m1Jobs[k];
+            var w = Math.max(jobs[jIdx] * scale, 6);
+            html += '<rect x="' + x1 + '" y="14" width="' + w + '" height="22" rx="4" fill="' + colors[jIdx % colors.length] + '"/>';
+            if (w > 12) html += '<text x="' + (x1 + w/2) + '" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700" font-family="inherit">' + jobs[jIdx] + '</text>';
+            x1 += w + 2;
+        }
+        var load1 = 0; for (var k = 0; k < m1Jobs.length; k++) load1 += jobs[m1Jobs[k]];
+        html += '<text x="' + (labelW + load1 * scale + 4) + '" y="28" font-size="10" fill="#15803d" font-family="inherit" font-weight="700">= ' + load1 + '</text>';
+
+        // M2
+        html += '<text x="0" y="62" font-size="11" fill="#475569" font-family="inherit" font-weight="600">M2</text>';
+        var x2 = labelW;
+        for (var k = 0; k < m2Jobs.length; k++) {
+            var jIdx = m2Jobs[k];
+            var w = Math.max(jobs[jIdx] * scale, 6);
+            html += '<rect x="' + x2 + '" y="50" width="' + w + '" height="22" rx="4" fill="' + colors[jIdx % colors.length] + '"/>';
+            if (w > 12) html += '<text x="' + (x2 + w/2) + '" y="64" text-anchor="middle" font-size="10" fill="#fff" font-weight="700" font-family="inherit">' + jobs[jIdx] + '</text>';
+            x2 += w + 2;
+        }
+        var load2 = 0; for (var k = 0; k < m2Jobs.length; k++) load2 += jobs[m2Jobs[k]];
+        html += '<text x="' + (labelW + load2 * scale + 4) + '" y="64" font-size="10" fill="#15803d" font-family="inherit" font-weight="700">= ' + load2 + '</text>';
+
+        // time axis
+        html += '<line x1="' + labelW + '" y1="86" x2="' + (labelW + total * scale) + '" y2="86" stroke="#cbd5e1" stroke-width="1"/>';
+        html += '<text x="' + labelW + '" y="96" font-size="9" fill="#94a3b8" font-family="inherit">0</text>';
+        html += '<text x="' + (labelW + total * scale) + '" y="96" text-anchor="end" font-size="9" fill="#94a3b8" font-family="inherit">' + total + '</text>';
+        html += '</svg>';
+
+        html += '<div style="margin-top:10px; font-size:13px; color:#475569; line-height:1.6;">';
+        html += 'M1 total: <b>' + load1 + '</b> &nbsp;|&nbsp; M2 total: <b>' + load2 + '</b> &nbsp;|&nbsp; Makespan = max(' + load1 + ', ' + load2 + ') = <b>' + res.ms + '</b>';
+        html += '</div>';
+    } else {
+        html += '<div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:7px; padding:12px; font-size:13px; color:#92400e; line-height:1.6;">';
+        html += 'No equal partition exists &mdash; the numbers cannot be split into two equal halves. The optimal makespan (' + (res ? res.ms : '?') + ') exceeds D = ' + T + '.';
+        html += '</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // connector
+    html += '<div style="' + connectorStyle + '">';
+    html += '<div style="width:2px; height:10px; background:#94a3b8;"></div>';
+    html += '<div style="font-size:18px; color:#1e3a8a; font-weight:700;">&#8661;</div>';
+    html += '<div style="font-size:11px; color:#94a3b8; margin:2px 0;">The two problems always agree</div>';
+    html += '<div style="width:2px; height:10px; background:#94a3b8;"></div>';
+    html += '</div>';
+
+    // ── STEP 3: CONCLUSION ────────────────────────────────────
+    var isYesAnswer = isYes && (total % 2 === 0);
+    var conclusionBg = isYesAnswer ? '#f0fdf4' : '#fff5f5';
+    var conclusionBorder = isYesAnswer ? '#86efac' : '#fca5a5';
+    var conclusionColor = isYesAnswer ? '#15803d' : '#dc2626';
+    var conclusionIcon = isYesAnswer ? '&#10003;' : '&#10007;';
+    var conclusionTitle = isYesAnswer ? 'YES instance — both problems answered YES' : 'NO instance — both problems answered NO';
+    var conclusionText = (total % 2 !== 0)
+        ? 'The sum (' + total + ') is odd, so it can never be split into two equal halves. Both Partition and Job Scheduling are NO for this input.'
+        : (isYesAnswer
+            ? 'We found a valid partition: one group sums to ' + T + ' (Machine 1) and the other sums to ' + T + ' (Machine 2). Makespan = ' + (res ? res.ms : T) + ' &le; D = ' + T + '. Since Partition is NP-complete and reduces to Job Scheduling in O(n) time, Job Scheduling must also be NP-complete.'
+            : 'No way to split the numbers equally exists. Job Scheduling confirms this: the optimal makespan (' + (res ? res.ms : '?') + ') exceeds D = ' + T + '. The answers match, proving the reduction is correct.');
+
+    html += '<div style="' + stepStyle + ' border-color:' + conclusionBorder + '; background:' + conclusionBg + ';">';
+    html += '<div><span style="' + stepNumStyle + ' background:' + conclusionColor + ';">' + conclusionIcon + '</span><span style="' + stepTitleStyle + ' color:' + conclusionColor + ';">' + conclusionTitle + '</span></div>';
+    html += '<p style="font-size:13px; color:#475569; margin:10px 0 0; line-height:1.7;">' + conclusionText + '</p>';
+    html += '</div>';
+
+    html += '</div>';
+    viz.innerHTML = html;
+}
+
+// -------------------------------------------------------
 // GROWTH CHART
 // -------------------------------------------------------
 
@@ -1649,6 +1917,7 @@ function switchTab(name) {
 
     if (name === 'proof') {
         showPartitionCheck();
+        buildReductionViz();
     }
 }
 
